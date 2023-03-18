@@ -1,14 +1,15 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
+	implementation project( ':api-rest')
 	implementation project( ':async-kafka-producer')
 
 
     implementation project(':model')
     implementation project(':usecase')
 
-
     implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.kafka:spring-kafka'
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
 }
 
