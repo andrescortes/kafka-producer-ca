@@ -3,6 +3,7 @@ package co.com.dev.kafkahelper;
 import co.com.dev.model.common.DomainEvent;
 import co.com.dev.model.common.gateway.DomainEventBus;
 import co.com.dev.model.ex.ErrorConvertToString;
+import co.com.dev.model.ex.ErrorSendKafka;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.java.Log;
@@ -42,31 +43,30 @@ public class KafkaFactoryProducer implements DomainEventBus {
         sendResultListenableFuture.addCallback(new ListenableFutureCallback<>() {
             @Override
             public void onFailure(Throwable ex) {
-                handlerFailure(key, value, ex);
+                handlerFailure(ex);
             }
 
             @Override
             public void onSuccess(SendResult<Integer, String> result) {
                 handlerSuccess(key, value, result);
-                System.out.println("number partition = " + result.getRecordMetadata().partition());
             }
         });
         return null;
     }
 
-    private void handlerFailure(Integer key, String value, Throwable ex) {
-        log.log(Level.SEVERE, "Error Sending the Message and the exception is {0}", ex.getMessage());
+    private void handlerFailure(Throwable ex) {
+        log.log(Level.FINE, "Error Sending the Message and the exception is {0}", ex.getMessage());
         try {
             throw ex;
         } catch (Throwable e) {
             log.log(Level.SEVERE, "Error in OnFailure", e.getMessage());
+            throw new ErrorSendKafka(e.getMessage());
         }
     }
 
     private void handlerSuccess(Integer key, String value, SendResult<Integer, String> result) {
         List<Object> key1 = List.of(key, value, result.getRecordMetadata().partition());
-        System.out.println("handlerSuccess = " + key1);
-        log.log(Level.SEVERE, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", key1);
+        log.log(Level.FINE, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", key1);
         // Do nothing because of X and Y.
     }
 }
