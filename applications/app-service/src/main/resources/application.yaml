@@ -15,10 +15,16 @@ spring:
       enabled: true
       path: "/h2"
   kafka:
+    template:
+      default-topic: library-events
     producer:
-      bootstrap-servers: localhost:9092
+      bootstrap-servers: localhost:8097, localhost:8098, localhost:8099
       key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    admin:
+      properties:
+        bootstrap.servers: localhost:8097, localhost:8098, localhost:8099
+
   config:
     activate:
       on-profile: local

@@ -12,13 +12,15 @@ rootProject.name = 'kafka-producer-ca'
 include ':app-service'
 include ':model'
 include ':usecase'
-include ':async-kafka-producer'
 include ':api-rest'
+include ':kafkahelper'
+include ':asynckafkaproducer'
 
 
 // shortcuts
 project(':app-service').projectDir = file('./applications/app-service')
 project(':model').projectDir = file('./domain/model')
 project(':usecase').projectDir = file('./domain/usecase')
-project(':async-kafka-producer').projectDir = file('./infrastructure/driven-adapters/async-kafka-producer')
 project(':api-rest').projectDir = file('./infrastructure/entry-points/api-rest')
+project(':kafkahelper').projectDir = file('./infrastructure/helpers/kafkahelper')
+project(':asynckafkaproducer').projectDir = file('./infrastructure/driven-adapters/asynckafkaproducer')

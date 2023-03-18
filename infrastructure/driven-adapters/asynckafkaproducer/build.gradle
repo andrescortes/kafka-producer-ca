@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(':model')
+    implementation project(':kafkahelper')
+    implementation 'org.springframework:spring-context'
+}
