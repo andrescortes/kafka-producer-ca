@@ -3,9 +3,9 @@ POST http://localhost:8080/api/libraryevent
 Content-Type: application/json
 
 {
-  "libraryEventId": 7,
+  "libraryEventId": 4,
   "book": {
-    "bookId": "100",
+    "bookId": "104",
     "bookName": "Kafka using springboot",
     "bookAuthor": "Dilip"
   }

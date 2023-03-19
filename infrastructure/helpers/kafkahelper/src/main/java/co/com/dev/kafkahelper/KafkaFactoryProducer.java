@@ -4,17 +4,24 @@ import co.com.dev.model.common.DomainEvent;
 import co.com.dev.model.common.gateway.DomainEventBus;
 import co.com.dev.model.ex.ErrorConvertToString;
 import co.com.dev.model.ex.ErrorSendKafka;
+import co.com.dev.model.ex.GlobalException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.java.Log;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 /**
@@ -23,6 +30,8 @@ import java.util.logging.Level;
 @Log
 @Component
 public class KafkaFactoryProducer implements DomainEventBus {
+    @Value("${app.kafka.default-topic}")
+    private String topic;
     @Autowired
     private KafkaTemplate<Integer, String> kafkaTemplate;
 
@@ -30,7 +39,7 @@ public class KafkaFactoryProducer implements DomainEventBus {
     private ObjectMapper objectMapper;
 
     @Override
-    public <I, T> Void emit(DomainEvent<I, T> event) {
+    public <I, T> void emitDefault(DomainEvent<I, T> event) {
         Integer key = (Integer) event.getEventId();
         String value;
         try {
@@ -51,22 +60,71 @@ public class KafkaFactoryProducer implements DomainEventBus {
                 handlerSuccess(key, value, result);
             }
         });
-        return null;
     }
+
+
+    public <I, T> SendResult<Integer, String> emitSync(DomainEvent<I, T> event) {
+        Integer key = (Integer) event.getEventId();
+        String value;
+        SendResult<Integer, String> sendResult;
+
+        try {
+            value = objectMapper.writeValueAsString(event.getData());
+        } catch (JsonProcessingException e) {
+            throw new ErrorConvertToString(e.getMessage());
+        }
+
+        try {
+            sendResult = kafkaTemplate.sendDefault(key, value).get();
+        } catch (ExecutionException | InterruptedException e) {
+            log.log(Level.SEVERE, "ExecutionException/InterruptedException, Error sending message and the exception is {}", e.getMessage());
+            Thread.currentThread().interrupt();
+            throw new ErrorSendKafka(e.getMessage());
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Exception, Error sending message and the exception is {}", e.getMessage());
+            throw new GlobalException(e.getMessage());
+        }
+
+        return sendResult;
+    }
+
+    public <I, T> void emitWithTopic(DomainEvent<I, T> event) {
+        Integer key = (Integer) event.getEventId();
+        String value;
+        try {
+            value = objectMapper.writeValueAsString(event.getData());
+        } catch (JsonProcessingException e) {
+            throw new ErrorConvertToString(e.getMessage());
+        }
+        ProducerRecord<Integer, String> producerRecord = this.buildProducerRecord(topic, key, value);
+
+        ListenableFuture<SendResult<Integer, String>> sendResultListenableFuture = kafkaTemplate.send(producerRecord);
+        sendResultListenableFuture.addCallback(new ListenableFutureCallback<>() {
+            @Override
+            public void onFailure(Throwable ex) {
+                handlerFailure(ex);
+            }
+
+            @Override
+            public void onSuccess(SendResult<Integer, String> result) {
+                handlerSuccess(key, value, result);
+            }
+        });
+    }
+
+    private ProducerRecord<Integer, String> buildProducerRecord(String topic, Integer key, String value) {
+        List<Header> headers = List.of(new RecordHeader("event-source", "scanner".getBytes()));
+        return new ProducerRecord<>(topic,null,key,value, headers);
+    }
+
 
     private void handlerFailure(Throwable ex) {
         log.log(Level.FINE, "Error Sending the Message and the exception is {0}", ex.getMessage());
-        try {
-            throw ex;
-        } catch (Throwable e) {
-            log.log(Level.SEVERE, "Error in OnFailure", e.getMessage());
-            throw new ErrorSendKafka(e.getMessage());
-        }
+        throw new GlobalException(ex.getMessage());
     }
 
     private void handlerSuccess(Integer key, String value, SendResult<Integer, String> result) {
-        List<Object> key1 = List.of(key, value, result.getRecordMetadata().partition());
-        log.log(Level.FINE, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", key1);
-        // Do nothing because of X and Y.
+        Object[] params = {key, value, result.getRecordMetadata().partition()};
+        log.log(Level.FINE, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", params);
     }
 }

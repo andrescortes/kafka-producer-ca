@@ -12,7 +12,7 @@ public interface DomainEventBus {
      * @param <I>   the type parameter
      * @param <T>   the type parameter
      * @param event the event
-     * @return void
      */
-    <I,T> Void emit(DomainEvent<I,T> event);
+    <I,T> void emitDefault(DomainEvent<I,T> event);
+//    <I,T> void emitSync(DomainEvent<I,T> event);
 }

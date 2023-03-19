@@ -24,7 +24,6 @@ spring:
     admin:
       properties:
         bootstrap.servers: localhost:8097, localhost:8098, localhost:8099
-
   config:
     activate:
       on-profile: local
@@ -40,6 +39,9 @@ management:
 logging:
   level:
     web: debug
+app:
+  kafka:
+    default-topic: library-events
 ---
 server:
   port: 8080
@@ -55,11 +57,6 @@ spring:
     console:
       enabled: true
       path: "/h2"
-  kafka:
-    producer:
-      bootstrap-servers: localhost:9092
-      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 management:
   endpoints:
     web:
@@ -72,3 +69,6 @@ management:
 logging:
   level:
     web: debug
+app:
+  kafka:
+    default-topic: library-events

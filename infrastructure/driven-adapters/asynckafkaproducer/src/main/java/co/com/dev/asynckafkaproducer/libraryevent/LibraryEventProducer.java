@@ -17,6 +17,6 @@ public class LibraryEventProducer implements LibraryEventRepository {
 
     @Override
     public void sendLibraryEvent(LibraryEvent libraryEvent) {
-        domainEventBus.emit(new DomainEvent<>(libraryEvent.getLibraryEventId(), libraryEvent));
+        domainEventBus.emitDefault(new DomainEvent<>(libraryEvent.getLibraryEventId(), libraryEvent));
     }
 }
