@@ -1,6 +1,5 @@
 package co.com.dev.model.libraryevent;
 
-import co.com.dev.model.common.DomainEvent;
 import lombok.*;
 
 @Getter
@@ -11,5 +10,6 @@ import lombok.*;
 public class LibraryEvent{
 
     private Integer libraryEventId;
+    private LibraryEventType libraryEventType;
     private Book book;
 }

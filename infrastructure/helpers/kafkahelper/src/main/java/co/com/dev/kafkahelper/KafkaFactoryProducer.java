@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -77,11 +76,11 @@ public class KafkaFactoryProducer implements DomainEventBus {
         try {
             sendResult = kafkaTemplate.sendDefault(key, value).get();
         } catch (ExecutionException | InterruptedException e) {
-            log.log(Level.SEVERE, "ExecutionException/InterruptedException, Error sending message and the exception is {}", e.getMessage());
+            KafkaFactoryProducer.log.log(Level.SEVERE, "ExecutionException/InterruptedException, Error sending message and the exception is {}", e.getMessage());
             Thread.currentThread().interrupt();
             throw new ErrorSendKafka(e.getMessage());
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Exception, Error sending message and the exception is {}", e.getMessage());
+            KafkaFactoryProducer.log.log(Level.SEVERE, "Exception, Error sending message and the exception is {}", e.getMessage());
             throw new GlobalException(e.getMessage());
         }
 
@@ -114,17 +113,18 @@ public class KafkaFactoryProducer implements DomainEventBus {
 
     private ProducerRecord<Integer, String> buildProducerRecord(String topic, Integer key, String value) {
         List<Header> headers = List.of(new RecordHeader("event-source", "scanner".getBytes()));
-        return new ProducerRecord<>(topic,null,key,value, headers);
+        return new ProducerRecord<>(topic, null, key, value, headers);
     }
 
 
     private void handlerFailure(Throwable ex) {
-        log.log(Level.FINE, "Error Sending the Message and the exception is {0}", ex.getMessage());
+        KafkaFactoryProducer.log.log(Level.INFO, "Error Sending the Message and the exception is {0}", ex.getMessage());
         throw new GlobalException(ex.getMessage());
     }
 
     private void handlerSuccess(Integer key, String value, SendResult<Integer, String> result) {
         Object[] params = {key, value, result.getRecordMetadata().partition()};
-        log.log(Level.FINE, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", params);
+
+        log.log(Level.INFO, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", params);
     }
 }
