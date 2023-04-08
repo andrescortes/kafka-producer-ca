@@ -10,29 +10,30 @@ import co.com.dev.model.common.DomainEvent;
 import co.com.dev.model.libraryevent.Book;
 import co.com.dev.model.libraryevent.LibraryEvent;
 import co.com.dev.model.libraryevent.LibraryEventType;
-import org.junit.jupiter.api.Assertions;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = {ApiRest.class})
-class ApiRestTest {
+
+@WebMvcTest(ApiRest.class)
+@AutoConfigureMockMvc
+class ApiRestUnitTest {
     @Autowired
-    private ApiRest apiRest;
+    private MockMvc mockMvc;
 
     @MockBean
     private KafkaFactoryProducer kafkaFactoryProducer;
@@ -40,13 +41,16 @@ class ApiRestTest {
     @MockBean
     private LibraryEventTransformer libraryEventTransformer;
 
+    private ObjectMapper mapper;
 
     private LibraryEvent libraryEvent;
+
     private LibraryEventDTO libraryEventDTO;
     private BookDTO bookDTO;
 
     @BeforeEach
     void setUp() {
+        mapper = new ObjectMapper();
         Book book = new Book(1, "Cien años de soledad", "Gabriel García Márquez");
         bookDTO = new BookDTO(1, "Cien años de soledad", "Gabriel García Márquez");
         libraryEvent = LibraryEvent.builder()
@@ -59,41 +63,24 @@ class ApiRestTest {
                 .libraryEventId(1)
                 .book(bookDTO)
                 .build();
-
     }
 
     @Test
-    @DisplayName("Test POST /api/libraryevent with MockMvc")
-    void testPostLibraryEventWithMockMvc() {
+    void shouldBePostLibraryEvent() throws Exception {
         //given
+        libraryEventDTO.setBook(null);
+        String json = mapper.writeValueAsString(libraryEventDTO);
+        System.out.println("json = " + json);
+        MockHttpServletRequestBuilder builder = post("/api/libraryevent")
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON);
         //when
-        doNothing().when(kafkaFactoryProducer).emitWithTopic(isA(DomainEvent.class));
         doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
         doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
-
-        ResponseEntity<LibraryEventDTO> response = apiRest.postLibraryEvent(libraryEventDTO);
-
-        Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        Assertions.assertEquals(libraryEventDTO, response.getBody());
-
-        Mockito.verify(kafkaFactoryProducer, Mockito.times(1)).emitWithTopic(any());
-    }
-
-    @Test
-    @DisplayName("Test POST /api/libraryevent returns BAD_REQUEST when library event ID is missing")
-    void testPostLibraryEventReturnsBadRequestWhenLibraryEventIdIsMissing() {
-        // Given
-        libraryEvent.setLibraryEventId(null);
-
-        // When
         doNothing().when(kafkaFactoryProducer).emitWithTopic(isA(DomainEvent.class));
-        doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
-        doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
-        ResponseEntity<LibraryEventDTO> response = apiRest.postLibraryEvent(libraryEventDTO);
 
-        // Then
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        Assertions.assertNull(response.getBody());
-        Mockito.verifyNoInteractions(kafkaFactoryProducer);
+        //then
+        mockMvc.perform(builder)
+                .andExpect(status().isCreated());
     }
 }

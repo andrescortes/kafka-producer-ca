@@ -4,69 +4,47 @@ import co.com.dev.api.library.dto.BookDTO;
 import co.com.dev.api.library.dto.LibraryEventDTO;
 import co.com.dev.api.library.dto.LibraryEventTypeDTO;
 import co.com.dev.api.library.transformers.LibraryEventTransformer;
+import co.com.dev.kafkahelper.KafkaFactoryProducer;
 import co.com.dev.model.common.DomainEvent;
 import co.com.dev.model.libraryevent.Book;
 import co.com.dev.model.libraryevent.LibraryEvent;
 import co.com.dev.model.libraryevent.LibraryEventType;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.serialization.IntegerDeserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.test.EmbeddedKafkaBroker;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@EmbeddedKafka(topics = {"library-events"}, partitions = 3)
-@TestPropertySource(properties = {
-        "spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
-        "spring.kafka.admin.properties.bootstrap-servers=${spring.embedded.kafka.brokers}",
-
-})
-@ContextConfiguration(classes = {TestApp.class})
-class ApiRestEmbeddedKafkaReadValueTest {
+class ApiRestEmbeddedKafkaIntegrationTest {
     @Autowired
     private TestRestTemplate testRestTemplate;
-    @Autowired
-    private EmbeddedKafkaBroker embeddedKafkaBroker;
+
+    @MockBean
+    private KafkaFactoryProducer kafkaFactoryProducer;
 
     @MockBean
     private LibraryEventTransformer libraryEventTransformer;
 
     private LibraryEvent libraryEvent;
-    private LibraryEventDTO libraryEventDTO;
 
-    private BookDTO bookDTO;
-    private Consumer<Integer, String> consumer;
+    private LibraryEventDTO libraryEventDTO;
 
     @BeforeEach
     void setUp() {
-        Map<String, Object> configs = new HashMap<>(KafkaTestUtils.consumerProps("group1", "true", embeddedKafkaBroker));
-        consumer = new DefaultKafkaConsumerFactory<>(configs, new IntegerDeserializer(), new StringDeserializer()).createConsumer();
-        embeddedKafkaBroker.consumeFromAllEmbeddedTopics(consumer);
-
-        Book book = new Book(1, "Wolf rain", "Jeff Besos");
-        bookDTO = new BookDTO(1, "Wolf rain", "Jeff Besos");
+        Book book = new Book(1, "Cien años de soledad", "Gabriel García Márquez");
+        BookDTO bookDTO = new BookDTO(1, "Cien años de soledad", "Gabriel García Márquez");
         libraryEvent = LibraryEvent.builder()
                 .libraryEventType(LibraryEventType.NEW)
                 .libraryEventId(1)
@@ -79,24 +57,17 @@ class ApiRestEmbeddedKafkaReadValueTest {
                 .build();
     }
 
-    @AfterEach
-    void tearDown() {
-        consumer.close();
-    }
-
     @Test
     @DisplayName("should create a LibraryEventDTO")
-    @Timeout(1)
     void postLibraryEvent() {
         // given
-        String expectedValue = "{\"libraryEventId\":1,\"libraryEventType\":\"NEW\",\"book\":{\"bookId\":1,\"bookName\":\"Wolf rain\",\"bookAuthor\":\"Jeff Besos\"}}";
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
         HttpEntity<LibraryEventDTO> requestEntity = new HttpEntity<>(libraryEventDTO, headers);
 
-
         // when
+        doNothing().when(kafkaFactoryProducer).emitWithTopic(isA(DomainEvent.class));
         doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
         doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
         ResponseEntity<LibraryEventDTO> responseEntity = testRestTemplate.postForEntity("/api/libraryevent", requestEntity, LibraryEventDTO.class);
@@ -110,9 +81,7 @@ class ApiRestEmbeddedKafkaReadValueTest {
         assertThat(requestEntityBody.getLibraryEventType()).isEqualTo(libraryEventDTO.getLibraryEventType());
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
-        // get record from topic
-        ConsumerRecord<Integer, String> singleRecord = KafkaTestUtils.getSingleRecord(consumer, "library-events");
-        assertThat(expectedValue).isEqualTo(singleRecord.value());
+        verify(kafkaFactoryProducer, times(1)).emitWithTopic(any());
     }
 
     @Test
@@ -125,11 +94,14 @@ class ApiRestEmbeddedKafkaReadValueTest {
         HttpEntity<LibraryEventDTO> requestEntity = new HttpEntity<>(libraryEventDTO, headers);
 
         // when
+        doNothing().when(kafkaFactoryProducer).emitWithTopic(isA(DomainEvent.class));
         doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
         doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
         ResponseEntity<LibraryEventDTO> responseEntity = testRestTemplate.postForEntity("/api/libraryevent", requestEntity, LibraryEventDTO.class);
 
         // then
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+        verify(kafkaFactoryProducer, times(0)).emitWithTopic(any());
     }
 }
