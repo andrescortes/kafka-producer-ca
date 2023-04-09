@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -66,14 +67,13 @@ class ApiRestUnitTest {
     }
 
     @Test
-    void shouldBePostLibraryEvent() throws Exception {
+    void shouldBePostLibraryEventSuccess() throws Exception {
         //given
-        libraryEventDTO.setBook(null);
         String json = mapper.writeValueAsString(libraryEventDTO);
-        System.out.println("json = " + json);
         MockHttpServletRequestBuilder builder = post("/api/libraryevent")
                 .content(json)
                 .contentType(MediaType.APPLICATION_JSON);
+
         //when
         doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
         doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
@@ -82,5 +82,49 @@ class ApiRestUnitTest {
         //then
         mockMvc.perform(builder)
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void shouldBePostLibraryEventError() throws Exception {
+        //given
+        libraryEventDTO.setBook(null);
+        String json = mapper.writeValueAsString(libraryEventDTO);
+        MockHttpServletRequestBuilder builder = post("/api/libraryevent")
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        //when
+        doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
+        doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
+        doNothing().when(kafkaFactoryProducer).emitWithTopic(isA(DomainEvent.class));
+
+        //then
+        mockMvc.perform(builder)
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void shouldBePostLibraryEventErrorValid() throws Exception {
+        //given
+        String errorExpected = "book.bookAuthor - must not be null, book.bookName - must not be null";
+        libraryEventDTO.setBook(BookDTO.builder()
+                .bookId(1)
+                .bookAuthor(null)
+                .bookName(null)
+                .build());
+        String json = mapper.writeValueAsString(libraryEventDTO);
+        MockHttpServletRequestBuilder builder = post("/api/libraryevent")
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        //when
+        doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
+        doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
+        doNothing().when(kafkaFactoryProducer).emitWithTopic(isA(DomainEvent.class));
+
+        //then
+        mockMvc.perform(builder)
+                .andExpect(status().is4xxClientError())
+                .andExpect(content().string(errorExpected));
     }
 }

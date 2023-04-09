@@ -29,7 +29,7 @@ public class ApiRest {
 
 
     @PostMapping("/libraryevent")
-    public ResponseEntity<LibraryEventDTO> postLibraryEvent(@Valid @RequestBody LibraryEventDTO libraryEventDTO) {
+    public ResponseEntity<LibraryEventDTO> postLibraryEvent(@Validated @RequestBody LibraryEventDTO libraryEventDTO) {
         LibraryEvent libraryEvent = libraryEventTransformer.toEntity(libraryEventDTO);
         if (libraryEvent.getLibraryEventId() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

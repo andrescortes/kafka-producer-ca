@@ -1,10 +1,10 @@
 package co.com.dev.kafkahelper;
 
 import co.com.dev.model.common.DomainEvent;
+import co.com.dev.model.common.ex.ErrorConvertToString;
+import co.com.dev.model.common.ex.ErrorSendKafka;
+import co.com.dev.model.common.ex.GlobalException;
 import co.com.dev.model.common.gateway.DomainEventBus;
-import co.com.dev.model.ex.ErrorConvertToString;
-import co.com.dev.model.ex.ErrorSendKafka;
-import co.com.dev.model.ex.GlobalException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.java.Log;
@@ -109,6 +109,34 @@ public class KafkaFactoryProducer implements DomainEventBus {
                 handlerSuccess(key, value, result);
             }
         });
+    }
+
+    public <I, T> ListenableFuture<SendResult<Integer, String>> emitWithTopicApproach2(DomainEvent<I, T> event) {
+        Integer key = (Integer) event.getEventId();
+        String value;
+        try {
+            value = objectMapper.writeValueAsString(event.getData());
+        } catch (JsonProcessingException e) {
+            throw new ErrorConvertToString(e.getMessage());
+        }
+        ProducerRecord<Integer, String> producerRecord;
+        producerRecord = this.buildProducerRecord(topic, key, value);
+
+        ListenableFuture<SendResult<Integer, String>> sendResultListenableFuture = null;
+
+        sendResultListenableFuture = kafkaTemplate.send(producerRecord);
+        sendResultListenableFuture.addCallback(new ListenableFutureCallback<>() {
+            @Override
+            public void onFailure(Throwable ex) {
+                handlerFailure(ex);
+            }
+
+            @Override
+            public void onSuccess(SendResult<Integer, String> result) {
+                handlerSuccess(key, value, result);
+            }
+        });
+        return sendResultListenableFuture;
     }
 
     private ProducerRecord<Integer, String> buildProducerRecord(String topic, Integer key, String value) {

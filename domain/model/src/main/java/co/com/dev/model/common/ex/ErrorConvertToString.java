@@ -1,6 +1,6 @@
-package co.com.dev.model.ex;
+package co.com.dev.model.common.ex;
 
-public class ErrorSendKafka extends RuntimeException {
+public class ErrorConvertToString extends RuntimeException {
     /**
      * Constructs a new runtime exception with the specified detail message.
      * The cause is not initialized, and may subsequently be initialized by a
@@ -9,7 +9,8 @@ public class ErrorSendKafka extends RuntimeException {
      * @param message the detail message. The detail message is saved for
      *                later retrieval by the {@link #getMessage()} method.
      */
-    public ErrorSendKafka(String message) {
+    public ErrorConvertToString(String message) {
         super(message);
     }
+
 }
