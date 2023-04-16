@@ -1,7 +1,7 @@
 apply plugin: 'org.springframework.boot'
 
 dependencies {
-	implementation project( ':asynckafkaproducer')
+	implementation project( ':async-messaging-senders')
 	implementation project( ':kafkahelper')
 	implementation project( ':api-rest')
 

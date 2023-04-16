@@ -14,7 +14,7 @@ include ':model'
 include ':usecase'
 include ':api-rest'
 include ':kafkahelper'
-include ':asynckafkaproducer'
+include ':async-messaging-senders'
 
 
 // shortcuts
@@ -23,4 +23,4 @@ project(':model').projectDir = file('./domain/model')
 project(':usecase').projectDir = file('./domain/usecase')
 project(':api-rest').projectDir = file('./infrastructure/entry-points/api-rest')
 project(':kafkahelper').projectDir = file('./infrastructure/helpers/kafkahelper')
-project(':asynckafkaproducer').projectDir = file('./infrastructure/driven-adapters/asynckafkaproducer')
+project(':async-messaging-senders').projectDir = file('./infrastructure/driven-adapters/async-messaging-senders')

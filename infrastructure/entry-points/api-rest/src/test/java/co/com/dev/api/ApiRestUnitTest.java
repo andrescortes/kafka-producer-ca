@@ -1,6 +1,6 @@
 package co.com.dev.api;
 
-import co.com.dev.api.library.ApiRest;
+import co.com.dev.api.library.CreateLibraryEventSevice;
 import co.com.dev.api.library.dto.BookDTO;
 import co.com.dev.api.library.dto.LibraryEventDTO;
 import co.com.dev.api.library.dto.LibraryEventTypeDTO;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(ApiRest.class)
+@WebMvcTest(CreateLibraryEventSevice.class)
 @AutoConfigureMockMvc
 class ApiRestUnitTest {
     @Autowired

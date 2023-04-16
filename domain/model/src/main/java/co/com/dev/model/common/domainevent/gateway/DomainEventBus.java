@@ -1,4 +1,4 @@
-package co.com.dev.model.common.gateway;
+package co.com.dev.model.common.domainevent.gateway;
 
 import co.com.dev.model.common.DomainEvent;
 
@@ -13,6 +13,7 @@ public interface DomainEventBus {
      * @param <T>   the type parameter
      * @param event the event
      */
-    <I,T> void emitDefault(DomainEvent<I,T> event);
-//    <I,T> void emitSync(DomainEvent<I,T> event);
+    <I, T> void emitDefault(DomainEvent<I, T> event);
+
+    <I, T> void emitWithTopic(DomainEvent<I, T> event);
 }

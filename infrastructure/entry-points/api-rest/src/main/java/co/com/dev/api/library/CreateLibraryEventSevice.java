@@ -16,14 +16,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-
 
 @Slf4j
 @RestController
 @RequestMapping("/api")
 @AllArgsConstructor
-public class ApiRest {
+public class CreateLibraryEventSevice {
     private final KafkaFactoryProducer kafkaFactoryProducer;
     private final LibraryEventTransformer libraryEventTransformer;
 

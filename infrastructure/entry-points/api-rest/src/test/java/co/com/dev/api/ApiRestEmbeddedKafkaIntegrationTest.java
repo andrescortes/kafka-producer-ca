@@ -1,5 +1,6 @@
 package co.com.dev.api;
 
+import co.com.dev.api.library.UpdateLibraryEventService;
 import co.com.dev.api.library.dto.BookDTO;
 import co.com.dev.api.library.dto.LibraryEventDTO;
 import co.com.dev.api.library.dto.LibraryEventTypeDTO;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Objects;
 
@@ -33,6 +35,9 @@ class ApiRestEmbeddedKafkaIntegrationTest {
 
     @MockBean
     private KafkaFactoryProducer kafkaFactoryProducer;
+
+    @MockBean
+    private UpdateLibraryEventService updateLibraryEventService;
 
     @MockBean
     private LibraryEventTransformer libraryEventTransformer;

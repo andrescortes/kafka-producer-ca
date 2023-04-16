@@ -4,7 +4,7 @@ import co.com.dev.model.common.DomainEvent;
 import co.com.dev.model.common.ex.ErrorConvertToString;
 import co.com.dev.model.common.ex.ErrorSendKafka;
 import co.com.dev.model.common.ex.GlobalException;
-import co.com.dev.model.common.gateway.DomainEventBus;
+import co.com.dev.model.common.domainevent.gateway.DomainEventBus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.java.Log;
@@ -61,7 +61,6 @@ public class KafkaFactoryProducer implements DomainEventBus {
         });
     }
 
-
     public <I, T> SendResult<Integer, String> emitSync(DomainEvent<I, T> event) {
         Integer key = (Integer) event.getEventId();
         String value;
@@ -86,7 +85,7 @@ public class KafkaFactoryProducer implements DomainEventBus {
 
         return sendResult;
     }
-
+    @Override
     public <I, T> void emitWithTopic(DomainEvent<I, T> event) {
         Integer key = (Integer) event.getEventId();
         String value;

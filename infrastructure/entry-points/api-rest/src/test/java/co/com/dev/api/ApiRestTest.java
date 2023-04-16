@@ -1,6 +1,6 @@
 package co.com.dev.api;
 
-import co.com.dev.api.library.ApiRest;
+import co.com.dev.api.library.CreateLibraryEventSevice;
 import co.com.dev.api.library.dto.BookDTO;
 import co.com.dev.api.library.dto.LibraryEventDTO;
 import co.com.dev.api.library.dto.LibraryEventTypeDTO;
@@ -29,10 +29,10 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = {ApiRest.class})
+@SpringBootTest(classes = {CreateLibraryEventSevice.class})
 class ApiRestTest {
     @Autowired
-    private ApiRest apiRest;
+    private CreateLibraryEventSevice createLibraryEventSevice;
 
     @MockBean
     private KafkaFactoryProducer kafkaFactoryProducer;
@@ -71,7 +71,7 @@ class ApiRestTest {
         doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
         doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
 
-        ResponseEntity<LibraryEventDTO> response = apiRest.postLibraryEvent(libraryEventDTO);
+        ResponseEntity<LibraryEventDTO> response = createLibraryEventSevice.postLibraryEvent(libraryEventDTO);
 
         Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode());
         Assertions.assertEquals(libraryEventDTO, response.getBody());
@@ -89,7 +89,7 @@ class ApiRestTest {
         doNothing().when(kafkaFactoryProducer).emitWithTopic(isA(DomainEvent.class));
         doReturn(libraryEvent).when(libraryEventTransformer).toEntity(any());
         doReturn(libraryEventDTO).when(libraryEventTransformer).toDTO(any());
-        ResponseEntity<LibraryEventDTO> response = apiRest.postLibraryEvent(libraryEventDTO);
+        ResponseEntity<LibraryEventDTO> response = createLibraryEventSevice.postLibraryEvent(libraryEventDTO);
 
         // Then
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());

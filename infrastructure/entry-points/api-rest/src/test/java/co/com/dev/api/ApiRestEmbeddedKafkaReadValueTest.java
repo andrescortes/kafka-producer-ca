@@ -1,13 +1,14 @@
 package co.com.dev.api;
 
+import co.com.dev.api.library.UpdateLibraryEventService;
 import co.com.dev.api.library.dto.BookDTO;
 import co.com.dev.api.library.dto.LibraryEventDTO;
 import co.com.dev.api.library.dto.LibraryEventTypeDTO;
 import co.com.dev.api.library.transformers.LibraryEventTransformer;
-import co.com.dev.model.common.DomainEvent;
 import co.com.dev.model.libraryevent.Book;
 import co.com.dev.model.libraryevent.LibraryEvent;
 import co.com.dev.model.libraryevent.LibraryEventType;
+import co.com.dev.usecase.libraryevent.UpdateLibraryEventUseCase;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
@@ -31,8 +32,6 @@ import java.util.Objects;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -47,8 +46,12 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 class ApiRestEmbeddedKafkaReadValueTest {
     @Autowired
     private TestRestTemplate testRestTemplate;
+
     @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
+
+    @MockBean
+    private UpdateLibraryEventService updateLibraryEventService;
 
     @MockBean
     private LibraryEventTransformer libraryEventTransformer;
