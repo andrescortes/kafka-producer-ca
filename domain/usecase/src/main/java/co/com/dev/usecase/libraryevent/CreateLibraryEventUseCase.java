@@ -5,7 +5,8 @@ import co.com.dev.model.libraryevent.gateways.LibraryEventRepository;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class LibraryEventUseCase {
+public class CreateLibraryEventUseCase {
+
     private final LibraryEventRepository libraryEventRepository;
 
     public void sendToKafka(LibraryEvent data) {

@@ -2,10 +2,9 @@ package co.com.dev.api.library;
 
 import co.com.dev.api.library.dto.LibraryEventDTO;
 import co.com.dev.api.library.transformers.LibraryEventTransformer;
-import co.com.dev.kafkahelper.KafkaFactoryProducer;
-import co.com.dev.model.common.DomainEvent;
 import co.com.dev.model.libraryevent.LibraryEvent;
 import co.com.dev.model.libraryevent.LibraryEventType;
+import co.com.dev.usecase.libraryevent.CreateLibraryEventUseCase;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,10 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 @AllArgsConstructor
 public class CreateLibraryEventSevice {
-    private final KafkaFactoryProducer kafkaFactoryProducer;
+
+    private final CreateLibraryEventUseCase createLibraryEventUseCase;
+
     private final LibraryEventTransformer libraryEventTransformer;
 
 
@@ -33,7 +34,7 @@ public class CreateLibraryEventSevice {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
-        kafkaFactoryProducer.emitWithTopic(new DomainEvent<>(libraryEvent.getLibraryEventId(), libraryEvent));
+        createLibraryEventUseCase.sendToKafka(libraryEvent);
         return ResponseEntity.status(HttpStatus.CREATED).body(libraryEventTransformer.toDTO(libraryEvent));
     }
 }

@@ -36,9 +36,6 @@ management:
     health:
       probes:
         enabled: true
-logging:
-  level:
-    web: debug
 app:
   kafka:
     default-topic: library-events

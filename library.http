@@ -1,12 +1,25 @@
 ### create a libraryEvent
-POST http://localhost:8080/api/libraryevent
+POST http://localhost:8080/api/v1/libraryevent
 Content-Type: application/json
 
 {
-  "libraryEventId": 4,
+  "libraryEventId": 1,
   "book": {
-    "bookId": "104",
+    "bookId": 100,
     "bookName": "Kafka using springboot",
+    "bookAuthor": "Dilip"
+  }
+}
+
+### create a libraryEvent
+PUT http://localhost:8080/api/v1/libraryevent
+Content-Type: application/json
+
+{
+  "libraryEventId": 1,
+  "book": {
+    "bookId": 1001,
+    "bookName": "Kafka using springboot ca",
     "bookAuthor": "Dilip"
   }
 }

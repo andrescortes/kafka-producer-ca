@@ -5,10 +5,11 @@ import co.com.dev.model.libraryevent.gateways.LibraryEventUpdateRepository;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class UpdateLibraryEventUseCase<T> {
-    private final LibraryEventUpdateRepository<T> libraryEventUpdateRepository;
+public class UpdateLibraryEventUseCase {
 
-    public T updateLibraryEvent(LibraryEvent libraryEvent) {
-         return libraryEventUpdateRepository.updateEventRepository(libraryEvent);
+    private final LibraryEventUpdateRepository libraryEventUpdateRepository;
+
+    public void updateLibraryEvent(LibraryEvent libraryEvent) {
+        libraryEventUpdateRepository.updateEventRepository(libraryEvent);
     }
 }

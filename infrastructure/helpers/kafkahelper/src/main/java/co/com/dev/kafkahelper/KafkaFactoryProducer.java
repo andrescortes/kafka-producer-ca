@@ -29,8 +29,10 @@ import java.util.logging.Level;
 @Log
 @Component
 public class KafkaFactoryProducer implements DomainEventBus {
+
     @Value("${app.kafka.default-topic}")
     private String topic;
+
     @Autowired
     private KafkaTemplate<Integer, String> kafkaTemplate;
 
@@ -144,12 +146,12 @@ public class KafkaFactoryProducer implements DomainEventBus {
     }
 
 
-    private void handlerFailure(Throwable ex) {
+    private static void handlerFailure(Throwable ex) {
         KafkaFactoryProducer.log.log(Level.INFO, "Error Sending the Message and the exception is {0}", ex.getMessage());
         throw new GlobalException(ex.getMessage());
     }
 
-    private void handlerSuccess(Integer key, String value, SendResult<Integer, String> result) {
+    private static void handlerSuccess(Integer key, String value, SendResult<Integer, String> result) {
         Object[] params = {key, value, result.getRecordMetadata().partition()};
 
         log.log(Level.INFO, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", params);
