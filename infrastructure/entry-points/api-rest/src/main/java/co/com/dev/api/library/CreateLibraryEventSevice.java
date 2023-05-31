@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
+
 
 @Slf4j
 @RestController
@@ -30,7 +32,7 @@ public class CreateLibraryEventSevice {
     @PostMapping("/libraryevent")
     public ResponseEntity<LibraryEventDTO> postLibraryEvent(@Validated @RequestBody LibraryEventDTO libraryEventDTO) {
         LibraryEvent libraryEvent = libraryEventTransformer.toEntity(libraryEventDTO);
-        if (libraryEvent.getLibraryEventId() == null) {
+        if (Objects.isNull(libraryEvent.getLibraryEventId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
