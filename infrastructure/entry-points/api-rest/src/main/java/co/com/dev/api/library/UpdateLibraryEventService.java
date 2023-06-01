@@ -27,10 +27,10 @@ public class UpdateLibraryEventService {
     private final LibraryEventTransformer libraryEventTransformer;
 
     @PutMapping("/libraryevent")
-    public ResponseEntity<LibraryEventDTO> updateLibraryEvent(@RequestBody @Validated LibraryEventDTO libraryEventDTO) {
+    public ResponseEntity<?> updateLibraryEvent(@RequestBody @Validated LibraryEventDTO libraryEventDTO) {
         LibraryEvent libraryEvent = libraryEventTransformer.toEntity(libraryEventDTO);
         if (Objects.isNull(libraryEvent.getLibraryEventId())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("LibraryEventId is required");
         }
         libraryEvent.setLibraryEventType(LibraryEventType.UPDATE);
         updateLibraryEventUseCase.updateLibraryEvent(libraryEvent);

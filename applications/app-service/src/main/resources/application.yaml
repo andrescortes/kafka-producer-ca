@@ -6,6 +6,15 @@ spring:
 server:
   port: 8080
 spring:
+  banner:
+    image:
+      location: classpath:banner.jpg
+      margin: 85
+      height: 15
+      width: 30
+      pixelmode: text
+      bitdepth: 8
+      invert: off
   application:
     name: "kafka-producer-ca"
   devtools:

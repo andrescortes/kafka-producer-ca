@@ -1,10 +1,10 @@
 package co.com.dev.kafkahelper;
 
 import co.com.dev.model.common.DomainEvent;
+import co.com.dev.model.common.domainevent.gateway.DomainEventBus;
 import co.com.dev.model.common.ex.ErrorConvertToString;
 import co.com.dev.model.common.ex.ErrorSendKafka;
 import co.com.dev.model.common.ex.GlobalException;
-import co.com.dev.model.common.domainevent.gateway.DomainEventBus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.java.Log;
@@ -38,6 +38,17 @@ public class KafkaFactoryProducer implements DomainEventBus {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    private static void handlerFailure(Throwable ex) {
+        KafkaFactoryProducer.log.log(Level.INFO, "Error Sending the Message and the exception is {0}", ex.getMessage());
+        throw new GlobalException(ex.getMessage());
+    }
+
+    private static void handlerSuccess(Integer key, String value, SendResult<Integer, String> result) {
+        Object[] params = {key, value, result.getRecordMetadata().partition()};
+
+        log.log(Level.INFO, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", params);
+    }
 
     @Override
     public <I, T> void emitDefault(DomainEvent<I, T> event) {
@@ -87,6 +98,7 @@ public class KafkaFactoryProducer implements DomainEventBus {
 
         return sendResult;
     }
+
     @Override
     public <I, T> void emitWithTopic(DomainEvent<I, T> event) {
         Integer key = (Integer) event.getEventId();
@@ -143,17 +155,5 @@ public class KafkaFactoryProducer implements DomainEventBus {
     private ProducerRecord<Integer, String> buildProducerRecord(String topic, Integer key, String value) {
         List<Header> headers = List.of(new RecordHeader("event-source", "scanner".getBytes()));
         return new ProducerRecord<>(topic, null, key, value, headers);
-    }
-
-
-    private static void handlerFailure(Throwable ex) {
-        KafkaFactoryProducer.log.log(Level.INFO, "Error Sending the Message and the exception is {0}", ex.getMessage());
-        throw new GlobalException(ex.getMessage());
-    }
-
-    private static void handlerSuccess(Integer key, String value, SendResult<Integer, String> result) {
-        Object[] params = {key, value, result.getRecordMetadata().partition()};
-
-        log.log(Level.INFO, "Message Send SuccessFully for the Key: {0} and the value is {1}, partition is {2}", params);
     }
 }

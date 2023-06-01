@@ -30,10 +30,10 @@ public class CreateLibraryEventSevice {
 
 
     @PostMapping("/libraryevent")
-    public ResponseEntity<LibraryEventDTO> postLibraryEvent(@Validated @RequestBody LibraryEventDTO libraryEventDTO) {
+    public ResponseEntity<?> postLibraryEvent(@Validated @RequestBody LibraryEventDTO libraryEventDTO) {
         LibraryEvent libraryEvent = libraryEventTransformer.toEntity(libraryEventDTO);
         if (Objects.isNull(libraryEvent.getLibraryEventId())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("LibraryEventId is required");
         }
         libraryEvent.setLibraryEventType(LibraryEventType.NEW);
         createLibraryEventUseCase.sendToKafka(libraryEvent);
