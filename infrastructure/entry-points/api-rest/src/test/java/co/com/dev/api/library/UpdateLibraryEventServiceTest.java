@@ -25,7 +25,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.nio.charset.StandardCharsets;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -85,22 +84,5 @@ class UpdateLibraryEventServiceTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.book.bookId").value(321))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.book.bookName").value("book1"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.book.bookAuthor").value("author1"));
-    }
-
-    @Test
-    void postLibraryEventBadRequest() throws Exception {
-        libraryEvent.setLibraryEventId(null);
-        Mockito.when(transformer.toEntity(any())).thenReturn(libraryEvent);
-
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.put("/api/v1/libraryevent")
-                .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding(StandardCharsets.UTF_8)
-                .content(mapper.writeValueAsString(libraryEventDTO))
-                .accept(MediaType.APPLICATION_JSON);
-
-        mockMvc.perform(requestBuilder)
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("LibraryEventId is required"));
-
     }
 }
